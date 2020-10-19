@@ -61,8 +61,9 @@ def is_object_alias_of_topic(groupdict: Dict[str, str]) -> bool:
 
 
 def parse_line_into_kv_pair(line: str) -> Optional[Tuple[str, Data]]:
+    match = pattern.fullmatch(line.strip())
 
-    if match := pattern.fullmatch(line.strip()):
+    if match:
         groupdict = match.groupdict()
 
         if is_object_instance_of_type(groupdict):
