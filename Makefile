@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-default: build
+default: bundle
 
 init: make-dirs head-data
 
@@ -29,7 +29,7 @@ clean-py:
 clean-build:
 	rm -rf build dist
 
-build: downloads/spark-3.0.1-bin-hadoop3.2.tgz pack
+bundle: downloads/spark-3.0.1-bin-hadoop3.2.tgz build
 	rm -rf dist
 	mkdir -p dist
 	tar xfz downloads/spark-3.0.1-bin-hadoop3.2.tgz -C dist
@@ -45,7 +45,7 @@ downloads/spark-3.0.1-bin-hadoop3.2.tgz:
 		--output downloads/spark-3.0.1-bin-hadoop3.2.tgz \
 		https://downloads.apache.org/spark/spark-3.0.1/spark-3.0.1-bin-hadoop3.2.tgz
 
-pack: clean-py
+build: clean-py
 	rm -rf build
 	mkdir -p build
 	zip -r build/deps.zip src/utils
@@ -81,4 +81,4 @@ data/freebase-rdf-latest.gz:
 		--output data/freebase-rdf-latest.gz \
 		http://commondatastorage.googleapis.com/freebase-public/rdf/freebase-rdf-latest.gz
 
-.PHONY: default init make-dirs up-dev down-dev run-dev clean clean-out clean-py clean-build build pack head-data
+.PHONY: default init make-dirs up-dev down-dev run-dev clean clean-out clean-py clean-build bundle build head-data

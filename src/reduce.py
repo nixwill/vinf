@@ -3,6 +3,7 @@ import sys
 from functools import reduce
 from utils import Data
 
+
 previous_key, first_value_json = next(sys.stdin).split(maxsplit=1)
 key_group = [Data.from_json(first_value_json)]
 
