@@ -31,10 +31,12 @@ class Data:
         self.aliases.update(other.aliases)
         return self
 
-    def to_json(self, with_topic: bool = False, **kwargs) -> str:
+    def to_json(self, with_topic: bool = False, uid: str = None, **kwargs) -> str:
         d = self.__dict__.copy()
         if not with_topic:
             del d['topic']
+        if uid:
+            d['id'] = uid
         d['types'] = tuple(d['types'])
         d['aliases'] = tuple(d['aliases'])
         return dumps(d, **kwargs)

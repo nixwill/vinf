@@ -1,4 +1,8 @@
-FROM python:3.6-alpine
-RUN apk add --no-cache bash openjdk8-jre
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+FROM alpine:latest AS builder
+RUN apk add --no-cache zip
+COPY src /opt/app
+RUN mkdir -p /opt/dist && cd /opt/app && zip -r /opt/dist/deps.zip utils && cp app.py /opt/dist/app.py
+
+FROM bitnami/spark:3.0.1
+COPY --from=builder /opt/dist .
+CMD ["./bin/spark-submit", "--py-files", "deps.zip", "app.py"]

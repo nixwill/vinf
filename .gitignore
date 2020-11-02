@@ -1,5 +1,6 @@
 # Project custom
 /data/
+/out/
 
 # IDE
 .idea/

@@ -1,14 +1,32 @@
 # VINF Project
 Semestral project for VINF class
 
-## Commands
+## Usage
+
+### Map Reduce using shell
 
 ```sh
-python app/map.py < data/freebase-head-1000000 | sort -k1,1 | python app/reduce.py > data/out.jsonl
+python src/map.py < data/freebase-head-1000000 | sort -k1,1 | python src/reduce.py > data/out.jsonl
 ```
 
+### Development cluster
+
+#### Initial setup
+
+```sh
+mkdir out
+sudo chown 1001:1001 out
+```
+
+#### Start cluster
 
 ```sh
 docker-compose up --scale spark-worker=4 spark-master spark-worker
-docker-compose up pyspark-client
+```
+
+#### Run parse job
+
+```sh
+docker-compose build --pull spark-app
+docker-compose run --rm spark-app
 ```
