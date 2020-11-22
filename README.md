@@ -12,9 +12,12 @@ Also `map.py` and `reduce.py` could be potentially used as MapReduce scripts for
 python src/map.py < data/freebase-head-1000000 | sort -k1,1 | python src/reduce.py > data/out.jsonl
 ```
 
+
 ## Pyspark application
 
+
 ### Usage
+
 
 #### Arguments
 
@@ -36,6 +39,7 @@ optional arguments:
                         URI for Mesos executor with bundled dependencies
   --collect             collect and print result
 ```
+
 
 #### Environment variables
 
@@ -71,7 +75,7 @@ spark-submit --py-files build/deps.zip build/app.py
 ```
 
 
-### Use custom executor
+#### Use custom executor
 
 Running `make bundle` or just a simple `make` creates directory `dist` containing `.tgz` file with bundled spark,
 pyspark and required libraries and dependencies.
