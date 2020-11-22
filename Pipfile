@@ -4,6 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+elasticsearch = ">=7,<8"
 
 [dev-packages]
 pyspark = "==3.0.1"

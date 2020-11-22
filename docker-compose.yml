@@ -13,6 +13,8 @@ services:
     volumes:
       - ./data:/opt/data
       - ./out:/opt/out
+    networks:
+      - spark-net
 
   spark-worker:
     image: bitnami/spark:3.0.1
@@ -27,6 +29,8 @@ services:
     volumes:
       - ./data:/opt/data
       - ./out:/opt/out
+    networks:
+      - spark-net
 
   spark-app:
     build: ./
@@ -41,3 +45,34 @@ services:
     volumes:
       - ./data:/opt/data
       - ./out:/opt/out
+    networks:
+      - spark-net
+
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - es-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.0
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://elastic:9200
+      ELASTICSEARCH_HOSTS: http://elastic:9200
+    networks:
+      - es-net
+
+volumes:
+  es-data:
+
+networks:
+  spark-net:
+  es-net:
