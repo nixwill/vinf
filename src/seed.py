@@ -10,15 +10,21 @@ from elasticsearch.helpers import bulk
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', type=argparse.FileType(mode='rb'), help='Path to a gzip file containing the parsed topics as jsonlines')
+parser.add_argument('-n', '--number', type=int, default=0, help='Report progress every NUMBER entries loaded')
 parser.add_argument('-t', '--topic', action='store_true', help='Keep the topic type')
 args = parser.parse_args()
+
+print('=' * shutil.get_terminal_size()[0])
+start_process_time = time.process_time()
+start_time = time.perf_counter()
 
 es = Elasticsearch()
 
 
-def feed(file, topic):
+def feed(file=args.file, topic=args.topic, progress=args.number):
     with gzip.open(file, mode='rb') as stream:
-        for line in stream:
+        n = 0
+        for i, line in enumerate(stream, start=1):
             doc = json.loads(line)
             if not topic:
                 doc['types'].remove('topic')
@@ -27,11 +33,12 @@ def feed(file, topic):
                 '_op_type': 'create',
                 '_source': doc,
             }
+            n += 1
+            if n == progress:
+                print(i, 'entries loaded...')
+                n = 0
+        print(i, 'total entries loaded')
 
-
-print('=' * shutil.get_terminal_size()[0])
-start_process_time = time.process_time()
-start_time = time.perf_counter()
 
 print('Removing old index...')
 es.indices.delete('topics', ignore=[400, 404])
@@ -53,12 +60,17 @@ es.indices.create(
                     },
                     'english_stemmer': {
                         'type': 'stemmer',
-                        'language': 'english'
+                        'language': 'english',
                     },
                     'english_possessive_stemmer': {
                         'type': 'stemmer',
-                        'language': 'possessive_english'
-                    }
+                        'language': 'possessive_english',
+                    },
+                    'ngram_2_3': {
+                        'type': 'ngram',
+                        'min_gram': 2,
+                        'max_gram': 3,
+                    },
                 },
                 'analyzer': {
                     'english_ngram': {
@@ -70,7 +82,7 @@ es.indices.create(
                             'asciifolding',
                             'english_stop',
                             'english_stemmer',
-                            'ngram',
+                            'ngram_2_3',
                         ],
                     },
                     'english_shingle': {
@@ -85,10 +97,6 @@ es.indices.create(
                             'shingle',
                         ],
                     },
-                    'type_ngram': {
-                        'type': 'custom',
-                        'tokenizer': 'ngram',
-                    },
                 },
             },
         },
@@ -99,40 +107,26 @@ es.indices.create(
                 },
                 'title': {
                     'type': 'text',
-                    'analyzer': 'english',
+                    'analyzer': 'english_shingle',
                     'fields': {
                         'ngram': {
                             'type': 'text',
                             'analyzer': 'english_ngram',
-                        },
-                        'shingle': {
-                            'type': 'text',
-                            'analyzer': 'english_shingle',
                         },
                     },
                 },
                 'aliases': {
                     'type': 'text',
-                    'analyzer': 'english',
+                    'analyzer': 'english_shingle',
                     'fields': {
                         'ngram': {
                             'type': 'text',
                             'analyzer': 'english_ngram',
                         },
-                        'shingle': {
-                            'type': 'text',
-                            'analyzer': 'english_shingle',
-                        },
                     },
                 },
                 'types': {
                     'type': 'keyword',
-                    'fields': {
-                        'ngram': {
-                            'type': 'text',
-                            'analyzer': 'type_ngram',
-                        },
-                    },
                 },
             },
         },
@@ -140,7 +134,7 @@ es.indices.create(
 )
 
 print('Indexing documents...')
-indexed, errors = bulk(es, feed(args.file, args.topic), chunk_size=5000, raise_on_error=False)
+indexed, errors = bulk(es, feed(), chunk_size=5000, raise_on_error=False, request_timeout=30)
 
 if errors:
     with open('errors.json', mode='w', encoding='UTF-8') as out:
