@@ -22,7 +22,7 @@ python src/map.py < data/freebase-head-1000000 | sort -k1,1 | python src/reduce.
 #### Arguments
 
 ```console
-$ python src/app.py -h 
+$ python src/app.py -h
 usage: app.py [-h] [-n NAME] [-m MASTER] [-i INPUT] [-o OUTPUT] [-c]
               [-e EXECUTOR_URI] [--collect]
 
@@ -112,4 +112,57 @@ make run-dev
 
 ```sh
 make down-dev
+```
+
+
+## Indexing parsed documents
+
+
+### Elasticsearch
+
+Elasticsearch is used as a tool to mediate the Apache Lucene index capabilities for full-text search purposes.
+In order to use it, first we need to start it (Kibana is optional).
+
+
+#### Start
+
+```sh
+docker-compose up -d elastic kibana
+```
+
+
+#### Stop
+
+```sh
+docker-compose down
+```
+
+
+### Seed script
+
+Python script that loads parsed data into Elasticsearch.
+
+
+#### Usage
+
+```console
+$ python src/seed.py -h
+usage: seed.py [-h] [-n NUMBER] [-t] file
+
+positional arguments:
+  file                  Path to a gzip file containing the parsed topics as
+                        jsonlines
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n NUMBER, --number NUMBER
+                        Report progress every NUMBER entries loaded
+  -t, --topic           Keep the topic type
+```
+
+
+#### Example
+
+```sh
+python src/seed.py -n 100000 data/out.jsonl.gz
 ```
