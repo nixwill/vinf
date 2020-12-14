@@ -22,21 +22,31 @@ es = Elasticsearch()
 
 
 def feed(file=args.file, topic=args.topic, progress=args.number):
+
     with gzip.open(file, mode='rb') as stream:
         n = 0
+
         for i, line in enumerate(stream, start=1):
             doc = json.loads(line)
+
             if not topic:
                 doc['types'].remove('topic')
+            if not doc['types']:
+                del doc['types']
+            if not doc['aliases']:
+                del doc['aliases']
+
             yield {
                 '_index': 'topics',
                 '_op_type': 'create',
                 '_source': doc,
             }
+
             n += 1
             if n == progress:
                 print(i, 'entries loaded...')
                 n = 0
+
         print(i, 'total entries loaded')
 
 
@@ -48,10 +58,9 @@ es.indices.create(
     'topics',
     body={
         'settings': {
-            'index': {
-                'number_of_shards': 1,
-                'number_of_replicas': 0,
-            },
+            'number_of_shards': 1,
+            'number_of_replicas': 0,
+            'max_ngram_diff': 2,
             'analysis': {
                 'filter': {
                     'english_stop': {
@@ -66,9 +75,9 @@ es.indices.create(
                         'type': 'stemmer',
                         'language': 'possessive_english',
                     },
-                    'ngram_2_3': {
+                    'ngram_1_3': {
                         'type': 'ngram',
-                        'min_gram': 2,
+                        'min_gram': 1,
                         'max_gram': 3,
                     },
                 },
@@ -82,7 +91,7 @@ es.indices.create(
                             'asciifolding',
                             'english_stop',
                             'english_stemmer',
-                            'ngram_2_3',
+                            'ngram_1_3',
                         ],
                     },
                     'english_shingle': {
@@ -95,6 +104,14 @@ es.indices.create(
                             'english_stop',
                             'english_stemmer',
                             'shingle',
+                        ],
+                    },
+                    'keyword_ngram': {
+                        'type': 'custom',
+                        'tokenizer': 'keyword',
+                        'filter': [
+                            'lowercase',
+                            'ngram_1_3',
                         ],
                     },
                 },
@@ -127,6 +144,12 @@ es.indices.create(
                 },
                 'types': {
                     'type': 'keyword',
+                    'fields': {
+                        'ngram': {
+                            'type': 'text',
+                            'analyzer': 'keyword_ngram',
+                        },
+                    },
                 },
             },
         },
